@@ -1,0 +1,98 @@
+%class SmcRecognizer
+%header SmcRecognizer.hpp
+%start map1::Start
+%map map1
+%%
+
+Start Entry { reset(); }
+{
+    Letter(c: char) [c == 'n'] ExpectF { }
+    Default Error { }
+}
+
+ExpectF
+{
+    Letter(c: char) [c == 'f'] ExpectS1 { }
+    Default Error { }
+}
+
+ExpectS1
+{
+    Letter(c: char) [c == 's'] ExpectColon { }
+    Default Error { }
+}
+
+ExpectColon
+{
+    Letter(c: char) [c == ':'] ExpectSlash1 { }
+    Default Error { }
+}
+
+ExpectSlash1
+{
+    Letter(c: char) [c == '/'] ExpectSlash2 { }
+    Default Error { }
+}
+
+ExpectSlash2
+{
+    Letter(c: char) [c == '/'] ExpectServerFirst { }
+    Default Error { }
+}
+
+ExpectServerFirst
+{
+    Letter(c: char) [((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))] ServerName { append_path(c); }
+    Slash Error { }
+    EOS Error { }
+    Default Error { }
+}
+
+ServerName
+{
+    Letter(c: char) [((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))] ServerName { append_path(c); }
+    Letter(c: char) [c == '/'] ExpectCatalog   { append_path('/'); }
+    EOS Error { }
+    Default Error { }
+}
+
+ExpectCatalog
+{
+    Letter(c: char) [((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))] CatalogName { append_path(c); }
+    Default Error { }
+}
+
+CatalogName
+{
+    Letter(c: char) [((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))] CatalogName { append_path(c); }
+    Letter(c: char) [c == '/'] ExpectSubOrFile { append_path('/'); }
+    EOS OK { finalize(); }
+    Default Error { }
+}
+
+ExpectSubOrFile
+{
+    Letter(c: char) [((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))] SubOrFile { append_path(c); }
+    Slash Error { }
+    EOS Error { }
+    Default Error { }
+}
+
+SubOrFile
+{
+    Letter(c: char) [((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))] SubOrFile { append_path(c); }
+    Letter(c: char) [c == '/'] ExpectSubOrFile { append_path('/'); }
+    EOS OK { finalize(); }
+    Default Error { }
+}
+
+OK
+{
+    Default OK { }
+}
+
+Error
+{
+    Default Start { reset(); }
+}
+%%

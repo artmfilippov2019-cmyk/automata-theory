@@ -1,0 +1,144 @@
+NUMERIC facing;
+NUMERIC steps;
+NUMERIC d;
+LOGIC ok;
+LOGIC moved;
+STRING known_pwd;
+
+PROC try_exit
+STRING seen[8];
+VISION [seen].
+NUMERIC peek;
+peek = 1
+{peek ? 1} BLOCK
+{seen[0] ! ""} BLOCK
+known_pwd = seen[0]
+seen[0] = ""
+UNBLOCK
+peek = 0
+UNBLOCK
+VOICE (known_pwd).
+.
+
+PROC can_move [NUMERIC dir, LOGIC pass &]
+pass = FALSE
+d = 1
+{dir ? 0} BLOCK
+PINGUP [d].
+dir = -1
+UNBLOCK
+{dir ? 1} BLOCK
+PINGRIGHT [d].
+dir = -1
+UNBLOCK
+{dir ? 2} BLOCK
+PINGDOWN [d].
+dir = -1
+UNBLOCK
+{dir ? 3} BLOCK
+PINGLEFT [d].
+dir = -1
+UNBLOCK
+{d > 1} BLOCK
+pass = TRUE
+d = 0
+UNBLOCK
+.
+
+PROC go [NUMERIC dir]
+{dir ? 0} BLOCK
+MOVEUP.
+facing = 0
+dir = -1
+UNBLOCK
+{dir ? 1} BLOCK
+MOVERIGHT.
+facing = 1
+dir = -1
+UNBLOCK
+{dir ? 2} BLOCK
+MOVEDOWN.
+facing = 2
+dir = -1
+UNBLOCK
+{dir ? 3} BLOCK
+MOVELEFT.
+facing = 3
+dir = -1
+UNBLOCK
+.
+
+PROC try_go [NUMERIC dir]
+moved = FALSE
+can_move [dir, ok].
+{ok} BLOCK
+go [dir].
+ok = FALSE
+moved = TRUE
+UNBLOCK
+.
+
+PROC follow_wall
+NUMERIC rd;
+NUMERIC ld;
+NUMERIC bd;
+NUMERIC fd;
+NUMERIC phase;
+rd = facing + 1
+{rd > 3} BLOCK
+rd = rd - 4
+UNBLOCK
+ld = facing + 3
+{ld > 3} BLOCK
+ld = ld - 4
+UNBLOCK
+bd = facing + 2
+{bd > 3} BLOCK
+bd = bd - 4
+UNBLOCK
+fd = facing
+phase = 0
+{phase ? 0} BLOCK
+try_go [rd].
+{moved} BLOCK
+phase = 4
+moved = FALSE
+UNBLOCK
+{phase ? 0} BLOCK
+phase = 1
+UNBLOCK
+UNBLOCK
+{phase ? 1} BLOCK
+try_go [fd].
+{moved} BLOCK
+phase = 4
+moved = FALSE
+UNBLOCK
+{phase ? 1} BLOCK
+phase = 2
+UNBLOCK
+UNBLOCK
+{phase ? 2} BLOCK
+try_go [ld].
+{moved} BLOCK
+phase = 4
+moved = FALSE
+UNBLOCK
+{phase ? 2} BLOCK
+phase = 3
+UNBLOCK
+UNBLOCK
+{phase ? 3} BLOCK
+try_go [bd].
+phase = 4
+UNBLOCK
+.
+
+known_pwd = ""
+facing = 1
+steps = 0
+{steps < 500} BLOCK
+try_exit.
+follow_wall.
+steps = steps + 1
+UNBLOCK

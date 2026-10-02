@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.22)
+set(CMAKE_CXX_STANDARD 20)
+add_library(dfa STATIC dfa.cpp)
+target_include_directories(dfa PUBLIC .)
+target_link_libraries(dfa nfa ast)
